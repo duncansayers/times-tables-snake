@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Times Tables Snake</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f1923;
+    --panel: #1a2a3a;
+    --panel2: #162030;
+    --accent: #f7c948;
+    --accent2: #ff6b6b;
+    --green: #4ecb71;
+    --blue: #4eb8f7;
+    --snake-head: #4ecb71;
+    --snake-body: #2ea855;
+    --grid-line: rgba(255,255,255,0.04);
+    --text: #e8f4f8;
+    --muted: #7a9ab0;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(78,203,113,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(78,184,247,0.07) 0%, transparent 50%);
+  }
+
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--accent);
+    text-shadow: 0 0 30px rgba(247,201,72,0.4);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  /* ── SETUP SCREEN ── */
+  #setup-screen {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .setup-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 0.75rem;
+    margin-bottom: 14px;
+  }
+
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .table-btn {
+    aspect-ratio: 1;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: var(--panel2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .table-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: scale(1.05);
+  }
+
+  .table-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f1923;
+    box-shadow: 0 0 16px rgba(247,201,72,0.4);
+  }
+
+  .all-btn {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: var(--panel2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 24px;
+  }
+
+  .all-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .all-btn.selected {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #0f1923;
+    box-shadow: 0 0 16px rgba(78,184,247,0.4);
+  }
+
+  .speed-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .speed-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: var(--panel2);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .speed-btn:hover { border-color: var(--green); }
+  .speed-btn.selected {
+    background: var(--green);
+    border-color: var(--green);
+    color: #0f1923;
+    box-shadow: 0 0 16px rgba(78,203,113,0.3);
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--green), #36a85a);
+    border: none;
+    border-radius: 12px;
+    color: #0f1923;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 20px rgba(78,203,113,0.4);
+  }
+
+  .start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(78,203,113,0.5);
+  }
+
+  .start-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── GAME SCREEN ── */
+  #game-screen { display: none; width: 100%; max-width: 600px; }
+
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 0 4px;
+  }
+
+  .hud-box {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 10px 18px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.07);
+    min-width: 110px;
+  }
+
+  .hud-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .hud-value {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+
+  .hud-value.score { color: var(--green); }
+  .hud-value.best { color: var(--accent); }
+  .hud-value.question { color: var(--blue); font-size: 1.3rem; }
+
+  .question-box {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 10px 24px;
+    border: 1px solid rgba(78,184,247,0.2);
+    text-align: center;
+    flex: 1;
+    margin: 0 12px;
+  }
+
+  .q-hint { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2px; }
+
+  canvas {
+    display: block;
+    width: 100%;
+    border-radius: var(--radius);
+    border: 2px solid rgba(255,255,255,0.07);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    cursor: none;
+  }
+
+  .controls-hint {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .key {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  /* ── GAME OVER OVERLAY ── */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #overlay.show { display: flex; }
+
+  .over-card {
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 40px 48px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    max-width: 360px;
+    width: 90%;
+    animation: popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .over-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+  .over-title { font-family: 'Fredoka One', cursive; font-size: 2rem; color: var(--accent2); margin-bottom: 8px; }
+  .over-score { font-family: 'Fredoka One', cursive; font-size: 3.5rem; color: var(--green); margin: 12px 0 4px; }
+  .over-best { font-size: 0.9rem; color: var(--muted); font-weight: 700; margin-bottom: 24px; }
+  .new-best { color: var(--accent); font-weight: 800; }
+
+  .over-btns { display: flex; gap: 12px; flex-direction: column; }
+
+  .play-again-btn {
+    padding: 14px;
+    background: linear-gradient(135deg, var(--green), #36a85a);
+    border: none;
+    border-radius: 12px;
+    color: #0f1923;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(78,203,113,0.4);
+  }
+
+  .play-again-btn:hover { transform: translateY(-2px); }
+
+  .menu-btn {
+    padding: 12px;
+    background: transparent;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    color: var(--muted);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .menu-btn:hover { border-color: var(--text); color: var(--text); }
+
+  /* Mobile arrow pad */
+  .arrow-pad {
+    display: none;
+    grid-template-areas: ". up ." "left . right" ". down .";
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    max-width: 180px;
+    margin: 14px auto 0;
+  }
+
+  @media (max-width: 600px) { .arrow-pad { display: grid; } }
+
+  .arrow-btn {
+    width: 52px;
+    height: 52px;
+    background: var(--panel);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .arrow-btn:active { background: rgba(78,203,113,0.3); }
+  .arrow-btn[data-dir="up"] { grid-area: up; }
+  .arrow-btn[data-dir="left"] { grid-area: left; }
+  .arrow-btn[data-dir="right"] { grid-area: right; }
+  .arrow-btn[data-dir="down"] { grid-area: down; }
+
+  /* pause hint */
+  .pause-hint {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<h1>🐍 Times Tables Snake</h1>
+<p class="subtitle">Eat the correct answer — avoid the wrong ones!</p>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <p class="setup-label">Choose a times table</p>
+  <div class="tables-grid" id="tables-grid"></div>
+  <button class="all-btn" id="all-btn" onclick="toggleAll()">⭐ ALL Tables (2–12)</button>
+
+  <p class="setup-label">Speed</p>
+  <div class="speed-row">
+    <button class="speed-btn selected" data-speed="slow" onclick="selectSpeed(this)">🐢 Slow</button>
+    <button class="speed-btn" data-speed="medium" onclick="selectSpeed(this)">🐇 Medium</button>
+    <button class="speed-btn" data-speed="fast" onclick="selectSpeed(this)">⚡ Fast</button>
+  </div>
+
+  <button class="start-btn" id="start-btn" onclick="startGame()" disabled>Select a Times Table to Start</button>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div class="hud">
+    <div class="hud-box">
+      <div class="hud-label">Score</div>
+      <div class="hud-value score" id="score-display">0</div>
+    </div>
+    <div class="question-box">
+      <div class="q-hint">What is</div>
+      <div class="hud-value question" id="question-display">? × ? = ?</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">Best</div>
+      <div class="hud-value best" id="best-display">0</div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="arrow-pad">
+    <button class="arrow-btn" data-dir="up" onpointerdown="mobileDir('up')">▲</button>
+    <button class="arrow-btn" data-dir="left" onpointerdown="mobileDir('left')">◀</button>
+    <button class="arrow-btn" data-dir="right" onpointerdown="mobileDir('right')">▶</button>
+    <button class="arrow-btn" data-dir="down" onpointerdown="mobileDir('down')">▼</button>
+  </div>
+
+  <div class="controls-hint">
+    <span class="key">↑ ↓ ← →  or  W A S D</span>
+    <span class="key">P = Pause</span>
+  </div>
+  <p class="pause-hint" id="pause-hint"></p>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div id="overlay">
+  <div class="over-card">
+    <div class="over-emoji" id="over-emoji">😵</div>
+    <div class="over-title">Game Over!</div>
+    <div style="color:var(--muted);font-size:0.85rem;font-weight:700;">YOUR SCORE</div>
+    <div class="over-score" id="over-score">0</div>
+    <div class="over-best" id="over-best"></div>
+    <div class="over-btns">
+      <button class="play-again-btn" onclick="restartGame()">▶ Play Again</button>
+      <button class="menu-btn" onclick="goMenu()">↩ Change Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+const CELL = 28;
+let COLS, ROWS;
+let selectedTables = new Set();
+let allSelected = false;
+let speedKey = 'slow';
+const SPEEDS = { slow: 200, medium: 130, fast: 80 };
+
+let snake, dir, nextDir, score, bestScore, gameLoop, paused;
+let question, correctAnswer, answerCells;
+let canvas, ctx;
+
+// Session best per table key
+const sessionBest = {};
+
+// ── SETUP UI ───────────────────────────────────────────────────────────────
+const grid = document.getElementById('tables-grid');
+for (let i = 2; i <= 12; i++) {
+  const btn = document.createElement('button');
+  btn.className = 'table-btn';
+  btn.textContent = i;
+  btn.dataset.n = i;
+  btn.onclick = () => toggleTable(btn, i);
+  grid.appendChild(btn);
+}
+
+function toggleTable(btn, n) {
+  // deselect ALL if individual chosen
+  if (allSelected) {
+    allSelected = false;
+    document.getElementById('all-btn').classList.remove('selected');
+    selectedTables.clear();
+    document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('selected'));
+  }
+  if (selectedTables.has(n)) {
+    selectedTables.delete(n);
+    btn.classList.remove('selected');
+  } else {
+    selectedTables.add(n);
+    btn.classList.add('selected');
+  }
+  updateStartBtn();
+}
+
+function toggleAll() {
+  allSelected = !allSelected;
+  const allBtn = document.getElementById('all-btn');
+  if (allSelected) {
+    allBtn.classList.add('selected');
+    selectedTables.clear();
+    document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('selected'));
+  } else {
+    allBtn.classList.remove('selected');
+  }
+  updateStartBtn();
+}
+
+function selectSpeed(btn) {
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  speedKey = btn.dataset.speed;
+}
+
+function updateStartBtn() {
+  const btn = document.getElementById('start-btn');
+  const hasSelection = allSelected || selectedTables.size > 0;
+  btn.disabled = !hasSelection;
+  btn.textContent = hasSelection ? '🎮 Start Game!' : 'Select a Times Table to Start';
+}
+
+// ── GAME INIT ──────────────────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('setup-screen').style.display = 'none';
+  const gs = document.getElementById('game-screen');
+  gs.style.display = 'block';
+
+  canvas = document.getElementById('gameCanvas');
+  // Size canvas to fit nicely
+  const maxW = Math.min(window.innerWidth - 32, 560);
+  COLS = Math.floor(maxW / CELL);
+  ROWS = Math.floor((maxW * 0.75) / CELL);
+  canvas.width = COLS * CELL;
+  canvas.height = ROWS * CELL;
+  ctx = canvas.getContext('2d');
+
+  const tableKey = allSelected ? 'all' : [...selectedTables].sort().join(',');
+  bestScore = sessionBest[tableKey] || 0;
+  document.getElementById('best-display').textContent = bestScore;
+
+  initRound();
+}
+
+function initRound() {
+  const cx = Math.floor(COLS / 2);
+  const cy = Math.floor(ROWS / 2);
+  snake = [
+    { x: cx, y: cy },
+    { x: cx - 1, y: cy },
+    { x: cx - 2, y: cy },
+  ];
+  dir = { x: 1, y: 0 };
+  nextDir = { x: 1, y: 0 };
+  score = 0;
+  paused = false;
+  document.getElementById('score-display').textContent = 0;
+  document.getElementById('pause-hint').textContent = '';
+
+  newQuestion();
+  if (gameLoop) clearInterval(gameLoop);
+  gameLoop = setInterval(tick, SPEEDS[speedKey]);
+}
+
+function getActiveTables() {
+  if (allSelected) return [2,3,4,5,6,7,8,9,10,11,12];
+  return [...selectedTables];
+}
+
+function newQuestion() {
+  const tables = getActiveTables();
+  const table = tables[Math.floor(Math.random() * tables.length)];
+  const multiplier = Math.floor(Math.random() * 11) + 2; // 2–12
+  correctAnswer = table * multiplier;
+  question = { table, multiplier };
+
+  document.getElementById('question-display').textContent = `${table} × ${multiplier} = ?`;
+
+  // Generate 2 wrong answers (distinct, plausible)
+  const wrongs = new Set();
+  while (wrongs.size < 2) {
+    let w;
+    const r = Math.random();
+    if (r < 0.33) {
+      // nearby tables
+      const offset = (Math.random() < 0.5 ? -1 : 1) * (Math.floor(Math.random() * 3) + 1);
+      w = Math.max(4, correctAnswer + offset * multiplier);
+    } else if (r < 0.66) {
+      w = correctAnswer + (Math.floor(Math.random() * 6) - 3) * 2;
+      if (w <= 0) w = correctAnswer + 6;
+    } else {
+      w = Math.floor(Math.random() * 120) + 4;
+    }
+    if (w !== correctAnswer && w > 0) wrongs.add(w);
+  }
+
+  const choices = [...wrongs, correctAnswer];
+  // Shuffle
+  for (let i = choices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [choices[i], choices[j]] = [choices[j], choices[i]];
+  }
+
+  // Place answers randomly on grid (not on snake)
+  const snakeSet = new Set(snake.map(s => `${s.x},${s.y}`));
+  answerCells = [];
+  const placedPos = new Set();
+
+  choices.forEach((val, idx) => {
+    let pos;
+    let attempts = 0;
+    do {
+      pos = {
+        x: Math.floor(Math.random() * COLS),
+        y: Math.floor(Math.random() * ROWS)
+      };
+      attempts++;
+    } while (
+      (snakeSet.has(`${pos.x},${pos.y}`) || placedPos.has(`${pos.x},${pos.y}`)) &&
+      attempts < 200
+    );
+    placedPos.add(`${pos.x},${pos.y}`);
+    answerCells.push({ x: pos.x, y: pos.y, value: val, correct: val === correctAnswer });
+  });
+}
+
+// ── GAME TICK ──────────────────────────────────────────────────────────────
+function tick() {
+  if (paused) return;
+
+  dir = { ...nextDir };
+  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+  // Wall wrap
+  head.x = (head.x + COLS) % COLS;
+  head.y = (head.y + ROWS) % ROWS;
+
+  // Self collision (skip tail which will move)
+  for (let i = 0; i < snake.length - 1; i++) {
+    if (snake[i].x === head.x && snake[i].y === head.y) {
+      endGame(); return;
+    }
+  }
+
+  // Check answer collision
+  let ate = null;
+  answerCells.forEach(cell => {
+    if (cell.x === head.x && cell.y === head.y) ate = cell;
+  });
+
+  if (ate) {
+    if (!ate.correct) { endGame(); return; }
+    // Correct!
+    score++;
+    document.getElementById('score-display').textContent = score;
+    snake.unshift(head);
+    newQuestion();
+  } else {
+    snake.unshift(head);
+    snake.pop();
+  }
+
+  draw();
+}
+
+// ── DRAWING ────────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#0f1923';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= COLS; x++) {
+    ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y <= ROWS; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke();
+  }
+
+  // Answer cells
+  answerCells.forEach(cell => {
+    const x = cell.x * CELL, y = cell.y * CELL;
+    const r = 8;
+
+    // Pill background
+    ctx.fillStyle = 'rgba(78,184,247,0.18)';
+    roundRect(ctx, x + 2, y + 2, CELL - 4, CELL - 4, r);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = 'rgba(78,184,247,0.7)';
+    ctx.lineWidth = 2;
+    roundRect(ctx, x + 2, y + 2, CELL - 4, CELL - 4, r);
+    ctx.stroke();
+
+    // Number
+    ctx.fillStyle = '#4eb8f7';
+    ctx.font = `bold ${CELL < 28 ? 11 : 13}px Nunito, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(cell.value, x + CELL / 2, y + CELL / 2);
+  });
+
+  // Snake body
+  for (let i = snake.length - 1; i >= 1; i--) {
+    const s = snake[i];
+    const alpha = Math.max(0.4, 1 - i / snake.length * 0.5);
+    ctx.fillStyle = `rgba(46,168,85,${alpha})`;
+    ctx.beginPath();
+    roundRect(ctx, s.x * CELL + 3, s.y * CELL + 3, CELL - 6, CELL - 6, 6);
+    ctx.fill();
+  }
+
+  // Snake head
+  const h = snake[0];
+  ctx.fillStyle = '#4ecb71';
+  roundRect(ctx, h.x * CELL + 2, h.y * CELL + 2, CELL - 4, CELL - 4, 8);
+  ctx.fill();
+
+  // Eyes
+  const ex = h.x * CELL + CELL / 2;
+  const ey = h.y * CELL + CELL / 2;
+  const eyeOff = CELL * 0.18;
+  const eyeSize = CELL < 28 ? 2 : 3;
+
+  let e1, e2;
+  if (dir.x === 1)       { e1 = { x: ex + eyeOff, y: ey - eyeOff }; e2 = { x: ex + eyeOff, y: ey + eyeOff }; }
+  else if (dir.x === -1) { e1 = { x: ex - eyeOff, y: ey - eyeOff }; e2 = { x: ex - eyeOff, y: ey + eyeOff }; }
+  else if (dir.y === -1) { e1 = { x: ex - eyeOff, y: ey - eyeOff }; e2 = { x: ex + eyeOff, y: ey - eyeOff }; }
+  else                   { e1 = { x: ex - eyeOff, y: ey + eyeOff }; e2 = { x: ex + eyeOff, y: ey + eyeOff }; }
+
+  ctx.fillStyle = '#0f1923';
+  ctx.beginPath(); ctx.arc(e1.x, e1.y, eyeSize, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(e2.x, e2.y, eyeSize, 0, Math.PI * 2); ctx.fill();
+
+  // Paused overlay
+  if (paused) {
+    ctx.fillStyle = 'rgba(15,25,35,0.7)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#f7c948';
+    ctx.font = `bold ${Math.floor(CELL * 1.2)}px Fredoka One, cursive`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('PAUSED — Press P to Resume', canvas.width / 2, canvas.height / 2);
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ── END GAME ───────────────────────────────────────────────────────────────
+function endGame() {
+  clearInterval(gameLoop);
+  gameLoop = null;
+
+  const tableKey = allSelected ? 'all' : [...selectedTables].sort().join(',');
+  const isNewBest = score > (sessionBest[tableKey] || 0);
+  if (isNewBest) {
+    sessionBest[tableKey] = score;
+    bestScore = score;
+    document.getElementById('best-display').textContent = bestScore;
+  }
+
+  document.getElementById('over-score').textContent = score;
+  document.getElementById('over-emoji').textContent = score === 0 ? '😬' : score < 5 ? '🙂' : score < 10 ? '😄' : '🏆';
+
+  const bestEl = document.getElementById('over-best');
+  if (isNewBest && score > 0) {
+    bestEl.innerHTML = `<span class="new-best">🌟 New Best Score!</span>`;
+  } else {
+    bestEl.innerHTML = `Best this session: <strong>${sessionBest[tableKey] || 0}</strong>`;
+  }
+
+  document.getElementById('overlay').classList.add('show');
+}
+
+function restartGame() {
+  document.getElementById('overlay').classList.remove('show');
+  initRound();
+}
+
+function goMenu() {
+  document.getElementById('overlay').classList.remove('show');
+  if (gameLoop) clearInterval(gameLoop);
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+}
+
+// ── INPUT ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const map = {
+    ArrowUp: { x: 0, y: -1 }, w: { x: 0, y: -1 }, W: { x: 0, y: -1 },
+    ArrowDown: { x: 0, y: 1 }, s: { x: 0, y: 1 }, S: { x: 0, y: 1 },
+    ArrowLeft: { x: -1, y: 0 }, a: { x: -1, y: 0 }, A: { x: -1, y: 0 },
+    ArrowRight: { x: 1, y: 0 }, d: { x: 1, y: 0 }, D: { x: 1, y: 0 },
+  };
+  if (e.key === 'p' || e.key === 'P') {
+    if (!gameLoop) return;
+    paused = !paused;
+    document.getElementById('pause-hint').textContent = paused ? '⏸ Game Paused' : '';
+    if (!paused) draw();
+    return;
+  }
+  const newDir = map[e.key];
+  if (newDir) {
+    e.preventDefault();
+    // Prevent reversing
+    if (newDir.x !== -dir.x || newDir.y !== -dir.y) nextDir = newDir;
+  }
+});
+
+function mobileDir(d) {
+  const map = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
+  const newDir = map[d];
+  if (newDir && (newDir.x !== -dir.x || newDir.y !== -dir.y)) nextDir = newDir;
+}
+
+// Swipe support
+let touchStartX, touchStartY;
+canvas && canvas.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchstart', e => {
+  if (!document.getElementById('game-screen').style.display || document.getElementById('game-screen').style.display === 'none') return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  if (touchStartX == null) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    mobileDir(dx > 0 ? 'right' : 'left');
+  } else if (Math.abs(dy) > 20) {
+    mobileDir(dy > 0 ? 'down' : 'up');
+  }
+  touchStartX = null;
+}, { passive: true });
+</script>
+</body>
+</html>
