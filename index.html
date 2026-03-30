@@ -343,6 +343,9 @@
     margin: 14px auto 0;
   }
 
+  .arrow-pad { display: none; }
+  
+/*
   @media (max-width: 600px) { .arrow-pad { display: grid; } }
 
   .arrow-btn {
@@ -361,7 +364,7 @@
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
-
+*/
   .arrow-btn:active { background: rgba(78,203,113,0.3); }
   .arrow-btn[data-dir="up"] { grid-area: up; }
   .arrow-btn[data-dir="left"] { grid-area: left; }
@@ -850,6 +853,11 @@ document.addEventListener('touchend', e => {
   }
   touchStartX = null;
 }, { passive: true });
+
+if ('ontouchstart' in window || navigator.maxTouchPooints > 0) {
+  document.querySelector('.arrow-pad').style.display = 'grid';
+}
+  
 </script>
 </body>
 </html>
